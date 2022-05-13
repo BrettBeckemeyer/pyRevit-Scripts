@@ -1,0 +1,12 @@
+corr	10
+circulation	20
+lobby	30
+vest	40
+ante	50
+airlock	60
+open	70
+shell	80
+default	100
+tlt	110
+toilet	120
+closet	130

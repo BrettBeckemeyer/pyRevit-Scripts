@@ -1,0 +1,350 @@
+
+
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		Title="Door Renumbering Tool" Height="700" Width="900" MinWidth="900" MinHeight="700" ShowInTaskbar="False" ResizeMode="CanResizeWithGrip"
+		WindowStartupLocation="CenterScreen" HorizontalContentAlignment="Center">
+	<Window.Resources>
+		<Style TargetType="{x:Type DataGridColumnHeader}">
+			<Setter Property="ContentTemplate">
+				<Setter.Value>
+					<DataTemplate>
+						<TextBlock TextWrapping="Wrap" Text="{Binding}"></TextBlock>
+					</DataTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+
+		<Style x:Key="IndexColumnStyle" TargetType="{x:Type DataGridCell}">
+			<Setter Property="Foreground" Value="Orange"/>
+		</Style>
+
+		<Style x:Key="DefaultColumnStyle" TargetType="{x:Type DataGridCell}">
+			<Setter Property="ToolTip" Value="{Binding tooltip}"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding printable}" Value="False">
+					<Setter Property="Foreground" Value="#bdbdbd" />
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
+
+		<Style x:Key="BoldColumnStyle" TargetType="{x:Type DataGridCell}">
+			<Setter Property="ToolTip" Value="{Binding tooltip}"/>
+			<Setter Property="FontWeight" Value="Bold"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding printable}" Value="False">
+					<Setter Property="Foreground" Value="#bdbdbd" />
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
+
+		<ControlTemplate x:Key="Default" TargetType="{x:Type DataGridCell}">
+			<StackPanel Background="White">
+				<GridViewRowPresenter Content="{TemplateBinding Content}"
+									  Columns="{TemplateBinding GridView.ColumnCollection}"/>
+			</StackPanel>
+		</ControlTemplate>
+
+		<ControlTemplate x:Key="NonPrintableSheet" TargetType='{x:Type DataGridCell}'>
+			<StackPanel Background="#f6f6f6">
+				<GridViewRowPresenter Content="{TemplateBinding Content}"
+										  Columns="{TemplateBinding GridView.ColumnCollection}"/>
+			</StackPanel>
+		</ControlTemplate>
+
+	</Window.Resources>
+
+	<DockPanel Margin="10">
+		<StackPanel DockPanel.Dock="Top">
+			<TextBlock FontWeight="Bold" Text="Settings" Margin="0,10,0,0" />
+			<Grid Margin="5,5,5,0">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto" />
+				</Grid.RowDefinitions>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+				<Border BorderThickness="1" BorderBrush="#6e6e6e" Grid.Column="0" Grid.Row="0"/>
+				<Border BorderThickness="1" BorderBrush="#6e6e6e" Grid.Column="1" Grid.Row="0"/>
+				<Border BorderThickness="1" BorderBrush="#6e6e6e" Grid.Column="2" Grid.Row="0"/>
+				<StackPanel Grid.Column="0" Grid.Row="0" Margin="10,10,10,10">
+					<WrapPanel ToolTip="Select the project phase for doors and rooms to process" Margin="5,5,5,5">
+						<ComboBox x:Name="phases_cb" Width = "200" Height="20" SelectionChanged="selection_changed"/>
+						<TextBlock FontWeight="Bold" Text=" Phase"/>
+					</WrapPanel>
+					<WrapPanel ToolTip="Select the project level(s) for doors to process" Margin="5,5,5,5">
+						<ComboBox x:Name="levels_cb" Width = "200" Height="20" SelectionChanged="selection_changed"/>
+						<TextBlock FontWeight="Bold" Text=" Level(s)"/>
+					</WrapPanel>
+				</StackPanel>
+				<StackPanel Margin="10,10,10,10" Grid.Column="1" Grid.Row="0">
+					<WrapPanel Margin="5,5,5,5" ToolTip="Use door parameter (yes/no) to determine doors to include">
+						<CheckBox x:Name="appear_param_cb" IsChecked="True" Click="ap_cb_selection_changed"/>
+						<TextBlock TextWrapping="WrapWithOverflow" xml:space="preserve" Margin="3,0,0,0"><Bold> Filter Doors By Parameter</Bold></TextBlock>
+					</WrapPanel>
+					<WrapPanel Margin="25,0,5,5" ToolTip="Door parameter name (yes/no type) to filter by">
+						<TextBox x:Name="appear_param_tb" FontFamily="Courier New" Width="180" Height="20" TextChanged="selection_changed"/>
+					</WrapPanel>
+				</StackPanel>
+				<StackPanel Margin="10,10,10,10" Grid.Column="2" Grid.Row="0">
+					<WrapPanel Margin="5,5,5,5" ToolTip="Exclude doors based on Function = Exterior">
+						<CheckBox x:Name="function_interior_b" IsChecked="True" Click="selection_changed"/>
+						<TextBlock TextWrapping="WrapWithOverflow" xml:space="preserve" Margin="3,0,0,0"><Bold> Exclude Exterior Doors</Bold></TextBlock>
+					</WrapPanel>
+					<WrapPanel Margin="5,5,5,5" ToolTip="Exclude rooms based on character in room number">
+						<CheckBox x:Name="room_exclude_cb" IsChecked="True" Click="selection_changed"/>
+						<TextBlock TextWrapping="WrapWithOverflow" xml:space="preserve" Margin="3,0,0,0"><Bold> Exclude Rooms By Character: </Bold></TextBlock>
+						<TextBox x:Name="roomno_character_tb" FontFamily="Courier New" Width="12" Height="20" TextChanged="selection_changed"/>
+					</WrapPanel>
+				</StackPanel>
+			</Grid>
+			<Expander IsExpanded="False" Margin="5,0,5,5" BorderBrush="#6e6e6e">
+				<Expander.Header>
+					<TextBlock FontWeight="Bold" Text="Priorities Settings" />
+				</Expander.Header>
+				<Grid Margin="30,0,0,0">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="240" />
+					</Grid.RowDefinitions>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="260" />
+						<ColumnDefinition Width="180" />
+						<ColumnDefinition Width="*" />
+					</Grid.ColumnDefinitions>
+					<DockPanel Grid.Column="2" Grid.Row="0" Margin="10,10,10,5">
+						<DockPanel DockPanel.Dock="Top">
+							<TextBlock Text=""/>
+						</DockPanel>
+						<DockPanel DockPanel.Dock="Bottom" Background="LightGray" Margin="10,0,10,5">
+							<StackPanel Margin="5,5,0,0">
+								<TextBlock FontSize="10" FontWeight="Bold" Text="Notes" />
+								<FlowDocumentReader>
+									<FlowDocument FontFamily="Century Gothic" FontSize="10" FontStyle="Italic">
+										<Table CellSpacing="2">
+											<Table.Columns>
+												<TableColumn Width="20"/>
+												<TableColumn/>
+											</Table.Columns>
+											<TableRowGroup>
+												<TableRow>
+													<TableCell><Paragraph>1. </Paragraph></TableCell>
+													<TableCell><Paragraph>Rooms with parameter that contain the matching text value will be assigned the priority number.</Paragraph></TableCell>
+												</TableRow>
+												<TableRow>
+													<TableCell><Paragraph>2. </Paragraph></TableCell>
+													<TableCell><Paragraph>If matching text is not found the 'default' value is used for priority.</Paragraph></TableCell>
+												</TableRow>
+												<TableRow>
+													<TableCell><Paragraph>3. </Paragraph></TableCell>
+													<TableCell><Paragraph>Rooms with higher priorities will be assigned as the room associated with the door.</Paragraph></TableCell>
+												</TableRow>
+												<TableRow>
+													<TableCell><Paragraph>4. </Paragraph></TableCell>
+													<TableCell><Paragraph>Reorder items in the table using the arrow buttons.</Paragraph></TableCell>
+												</TableRow>
+												<TableRow>
+													<TableCell><Paragraph>5. </Paragraph></TableCell>
+													<TableCell><Paragraph>Items in the table can be edited, deleted (using delete key), or added with the 'Add' button.</Paragraph></TableCell>
+												</TableRow>
+												<TableRow>
+													<TableCell><Paragraph>6. </Paragraph></TableCell>
+													<TableCell><Paragraph>Current list can be saved to an external text file or a previously saved list can be loaded using the Open and Save buttons.</Paragraph></TableCell>
+												</TableRow>
+											</TableRowGroup>
+										</Table>
+									</FlowDocument>
+								</FlowDocumentReader>
+							</StackPanel>
+						</DockPanel>
+					</DockPanel>
+					<DockPanel Grid.Column="1" Grid.Row="0" Margin="0,0,0,0">
+						<DockPanel DockPanel.Dock="Top" Margin="5,30,5,5">
+							<StackPanel>
+								<TextBlock Margin="0,0,0,0" TextWrapping="WrapWithOverflow" FontWeight="Bold" Text="Room parameter for priority text match:"/>
+								<StackPanel Margin="0,0,0,0">
+									<RadioButton x:Name="room_name_rb" Margin="15,5,0,0" GroupName="PriorityParam" Content="Room Name" Checked="selection_changed"/>
+									<RadioButton x:Name="room_dept_rb" Margin="15,5,0,0" GroupName="PriorityParam" Content="Department" Checked="selection_changed"/>
+									<RadioButton x:Name="room_occ_rb" Margin="15,5,0,0" GroupName="PriorityParam" Content="Occupancy" Checked="selection_changed"/>
+								</StackPanel>
+							</StackPanel>
+						</DockPanel>
+						<DockPanel DockPanel.Dock="Bottom" Margin="10,10,10,5">
+							<StackPanel>
+								<Button x:Name="savefile_b" Margin="0,0,0,0" Height="24" Content="Save to File" Click="b_save_file"/>
+								<Button x:Name="openfile_b" Margin="0,0,0,0" Height="24" Content="Open File" Click="b_open_file"/>
+							</StackPanel>
+						</DockPanel>
+					</DockPanel>
+					<DockPanel Grid.Column="0" Grid.Row="0" Margin="0,0,0,0">
+						<DockPanel Margin="10,10,10,10">
+							<TextBlock DockPanel.Dock="Top" FontWeight="Bold" Text="Priorities Table" />
+							<DockPanel DockPanel.Dock="Bottom" Margin="0,5,0,5">
+								<Grid DockPanel.Dock="Left" Width="30" Margin="0,0,3,0">
+									<Grid.RowDefinitions>
+										<RowDefinition />
+										<RowDefinition />
+										<RowDefinition />
+										<RowDefinition />
+										<RowDefinition />
+									</Grid.RowDefinitions>
+									<Button Grid.Row="0" Margin="0,0,0,5" Content="Add" Click="_pl_add_row">
+										<Button.LayoutTransform>
+											<RotateTransform Angle="-90" />
+										</Button.LayoutTransform>
+									</Button>
+									<Button Grid.Row="1" Margin="0,0,0,0" Content="&gt;&gt;&gt;" Click="_pl_move_top">
+										<Button.LayoutTransform>
+											<RotateTransform Angle="-90" />
+										</Button.LayoutTransform>
+									</Button>
+									<Button Grid.Row="2" Margin="0,0,0,0" Content="&gt;" Click="_pl_move_1up">
+										<Button.LayoutTransform>
+											<RotateTransform Angle="-90" />
+										</Button.LayoutTransform>
+									</Button>
+									<Button Grid.Row="3" Margin="0,0,0,0" Content="&lt;" Click="_pl_move_1down">
+										<Button.LayoutTransform>
+											<RotateTransform Angle="-90" />
+										</Button.LayoutTransform>
+									</Button>
+									<Button Grid.Row="4" Margin="0,0,0,0" Content="&lt;&lt;&lt;" Click="_pl_move_bottom">
+										<Button.LayoutTransform>
+											<RotateTransform Angle="-90" />
+										</Button.LayoutTransform>
+									</Button>
+								</Grid>
+								<DataGrid x:Name="priorities_dg" DockPanel.Dock="Right" 
+										  AutoGenerateColumns="False"
+										  BorderThickness="1"
+										  RowHeaderWidth="0"
+										  CanUserSortColumns="False"
+										  HorizontalGridLinesBrush="#6e6e6e"
+										  VerticalGridLinesBrush="#6e6e6e"
+										  Sorting="selection_changed"
+										  ScrollViewer.CanContentScroll="True"
+										  ScrollViewer.VerticalScrollBarVisibility="Visible"
+										  ScrollViewer.HorizontalScrollBarVisibility="Auto">
+									<DataGrid.CellStyle>
+										<Style TargetType="DataGridCell" >
+											<Setter Property="BorderThickness" Value="0"/>
+										</Style>
+									</DataGrid.CellStyle>
+									<DataGrid.Columns>
+										<DataGridTextColumn Header="Text to match" Binding="{Binding match_text}" MinWidth="140" Width="*" IsReadOnly="False" CellStyle="{StaticResource BoldColumnStyle}"/>
+										<DataGridTextColumn Header="#" Binding="{Binding order_index}" MinWidth="40" Width="40" IsReadOnly="True" CellStyle="{StaticResource DefaultColumnStyle}"/>
+									</DataGrid.Columns>
+								</DataGrid>
+							</DockPanel>
+						</DockPanel>
+					</DockPanel>
+				</Grid>
+			</Expander>
+			<Button x:Name="populate_b"
+					Margin="10,0,10,0"
+					Height="24" 
+					Content="Populate Table"
+					Click="populate_dg"/>
+		</StackPanel>
+		<Grid DockPanel.Dock="Bottom" Background="LightGray" Margin="0,3,0,3">
+			<DockPanel LastChildFill="True">
+				<Button DockPanel.Dock="Right" x:Name="apply_b" Content="Apply Changes" Click="apply_changes" Width="100" Margin="0,5,15,5"/>
+				<Button DockPanel.Dock="Right" x:Name="cancel_b" Content="Cancel" Click="cancel" Width="100" Margin="0,5,0,5"/>
+				<Button DockPanel.Dock="Left" x:Name="select_b" Content="Check" Click="check_selected" Width="50" Margin="15,5,0,5"/>
+				<Button DockPanel.Dock="Left" x:Name="deselect_b" Content="Uncheck" Click="uncheck_selected" Width="50" Margin="0,5,0,5"/>
+				<Button DockPanel.Dock="Left" x:Name="select_all_b" Content="X All" Click="check_all" Width="50" Margin="0,5,0,5"/>
+				<Button DockPanel.Dock="Left" x:Name="deselect_all_b" Content="X None" Click="uncheck_all" Width="50" Margin="0,5,0,5"/>
+				<TextBlock TextAlignment="Center" FontFamily="Verdana" FontWeight="Light" Foreground="SlateGray" FontSize="9"> Created by <Hyperlink Foreground="Red" NavigateUri="https://github.com/BrettBeckemeyer">BrettBeckemeyer</Hyperlink></TextBlock>
+			</DockPanel>
+<!--			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto" />
+			</Grid.RowDefinitions>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+			<Button x:Name="apply_b"
+					Margin="5,0,0,0"
+					Grid.Column="0" Grid.Row="0"
+					Height="24"
+					Content="Apply Changes"
+					IsEnabled="False"
+					Click="apply_changes"/>
+			<Button x:Name="cancel_b"
+					Margin="5,0,0,0"
+					Grid.Column="1" Grid.Row="0"
+					Height="24"
+					Content="Cancel"
+					Click="cancel"/>
+			<Button x:Name="check_b"
+					Margin="5,0,0,0"
+					Grid.Column="2" Grid.Row="0"
+					Height="24"
+					Content="Check All"
+					Click="check_all"/>
+			<Button x:Name="uncheck_b"
+					Margin="5,0,0,0"
+					Grid.Column="3" Grid.Row="0"
+					Height="24"
+					Content="Uncheck All"
+					Click="uncheck_all"/>
+-->
+		</Grid>
+		<DockPanel>
+			<TextBlock DockPanel.Dock="Top" FontWeight="Bold" Text="Review Table" Margin="0,10,0,5" />
+			<DockPanel DockPanel.Dock="Bottom">
+					<DataGrid x:Name="items_dg"
+							  AutoGenerateColumns="False"
+							  BorderThickness="1"
+							  RowHeaderWidth="0"
+							  CanUserSortColumns="False"
+							  HorizontalGridLinesBrush="#6e6e6e"
+							  VerticalGridLinesBrush="#6e6e6e"
+							  Sorting="sorting_changed"
+							  ScrollViewer.CanContentScroll="True"
+							  ScrollViewer.VerticalScrollBarVisibility="Auto"
+							  ScrollViewer.HorizontalScrollBarVisibility="Auto">
+						<DataGrid.CellStyle>
+							<Style TargetType="DataGridCell" >
+								<Setter Property="BorderThickness" Value="0"/>
+							</Style>
+						</DataGrid.CellStyle>
+						<DataGrid.Columns>
+							<DataGridCheckBoxColumn Header=" " Binding="{Binding check}" Width="20" IsReadOnly="False" CellStyle="{StaticResource DefaultColumnStyle}"/>
+							<DataGridTextColumn Header="Orig. Mark" Binding="{Binding mk_org}" MinWidth="50" Width="50" IsReadOnly="True" CellStyle="{StaticResource DefaultColumnStyle}"/>
+							<DataGridTextColumn Header="New Mark" Binding="{Binding mk_new}" MinWidth="50" Width="50" IsReadOnly="True" CellStyle="{StaticResource BoldColumnStyle}"/>
+							<DataGridTextColumn Header="Room Num." Binding="{Binding rm_own_num}" MinWidth="50" Width="50" IsReadOnly="True" CellStyle="{StaticResource DefaultColumnStyle}"/>
+							<DataGridTextColumn Header="Reason Assigned" Binding="{Binding own_rsn}" MinWidth="120" Width="*" IsReadOnly="True" CellStyle="{StaticResource DefaultColumnStyle}"/>
+							<DataGridTextColumn Header="To Room Num." Binding="{Binding rm_to_num}" MinWidth="50" Width="50" IsReadOnly="True" CellStyle="{StaticResource DefaultColumnStyle}"/>
+							<DataGridTextColumn Header="To Room Priority Parameter Value" Binding="{Binding rm_to_keycheck}" MinWidth="120" Width="*" IsReadOnly="True" CellStyle="{StaticResource DefaultColumnStyle}"/>
+<!--							<DataGridTextColumn Binding="{Binding rm_to_keycheck}" MinWidth="100" Width="*" IsReadOnly="True" CellStyle="{StaticResource DefaultColumnStyle}"/>
+								<DataGridTextColumn.HeaderTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding rm_header}"/>
+									</DataTemplate>
+								</DataGridTextColumn.HeaderTemplate>-->
+<!--							<DataGridTemplateColumn>
+								<DataGridTemplateColumn.HeaderTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding rm_header, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}" />
+									</DataTemplate>
+								</DataGridTemplateColumn.HeaderTemplate>
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding rm_to_keycheck}" Width="200" />
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>-->
+							<DataGridTextColumn Header="To Room Priority" Binding="{Binding rm_to_prty}" MinWidth="55" Width="55" IsReadOnly="True" CellStyle="{StaticResource DefaultColumnStyle}"/>
+							<DataGridTextColumn Header="From Room Num." Binding="{Binding rm_frm_num}" MinWidth="50" Width="50" IsReadOnly="True" CellStyle="{StaticResource DefaultColumnStyle}"/>
+							<DataGridTextColumn Header="From Room Priority Parameter Value" Binding="{Binding rm_frm_keycheck}" MinWidth="120" Width="*" IsReadOnly="True" CellStyle="{StaticResource DefaultColumnStyle}"/>
+							<DataGridTextColumn Header="From Rm Priority" Binding="{Binding rm_frm_prty}" MinWidth="55" Width="55" IsReadOnly="True" CellStyle="{StaticResource DefaultColumnStyle}"/>
+						</DataGrid.Columns>
+					</DataGrid>
+			</DockPanel>
+		</DockPanel>
+	</DockPanel>
+</Window>
