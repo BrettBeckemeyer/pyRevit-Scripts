@@ -2,7 +2,7 @@
 # pyRevit Scripts
  Additional scripts for use with pyRevit
 
-Prerequisite: pyRevit must be installed from https://github.com/eirannejad/pyRevit
+Dependencies: pyRevit must be installed from https://github.com/eirannejad/pyRevit
 Credits / Contributors: Ehsan Iran-Nejad (pyRevit)
 Maintainted by: Brett Beckemeyer (bbeckemeyer@cannondesign.com)
 
