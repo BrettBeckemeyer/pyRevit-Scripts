@@ -80,6 +80,19 @@
 					</WrapPanel>
 				</StackPanel>
 				<StackPanel Margin="10,10,10,10" Grid.Column="1" Grid.Row="0">
+					<WrapPanel Margin="5,5,5,5" ToolTip="Character to begin suffixes (typically A or 1) and optional separator">
+						<TextBlock TextWrapping="WrapWithOverflow" xml:space="preserve" Margin="0,0,0,0"><Bold>Suffix Handling: </Bold>(> 1 door per room)</TextBlock>
+					</WrapPanel>
+					<WrapPanel Margin="25,0,5,5" ToolTip="Enter an optional separator character between the room number and suffix">
+						<TextBox x:Name="suffix_separator_tb" FontFamily="Courier New" Width="12" Height="20" TextChanged="selection_changed"/>
+						<TextBlock TextWrapping="WrapWithOverflow" xml:space="preserve" Margin="0,0,0,0">  Separator character <Italic>(optional)</Italic></TextBlock>
+					</WrapPanel>
+					<WrapPanel Margin="25,0,5,5" ToolTip="Enter the default start character for suffixes (A for alpha and 1 for numeric)">
+						<TextBox x:Name="default_suffix_tb" FontFamily="Courier New" Width="14" Height="20" TextChanged="selection_changed"/>
+						<TextBlock TextWrapping="WrapWithOverflow" xml:space="preserve" Margin="0,0,0,0">  Start Character <Italic>(ie. A or 1)</Italic></TextBlock>
+					</WrapPanel>
+				</StackPanel>
+				<StackPanel Margin="10,10,10,10" Grid.Column="2" Grid.Row="0">
 					<WrapPanel Margin="5,5,5,5" ToolTip="Use door parameter (yes/no) to determine doors to include">
 						<CheckBox x:Name="appear_param_cb" IsChecked="True" Click="ap_cb_selection_changed"/>
 						<TextBlock TextWrapping="WrapWithOverflow" xml:space="preserve" Margin="3,0,0,0"><Bold> Filter Doors By Parameter</Bold></TextBlock>
@@ -87,8 +100,6 @@
 					<WrapPanel Margin="25,0,5,5" ToolTip="Door parameter name (yes/no type) to filter by">
 						<TextBox x:Name="appear_param_tb" FontFamily="Courier New" Width="180" Height="20" TextChanged="selection_changed"/>
 					</WrapPanel>
-				</StackPanel>
-				<StackPanel Margin="10,10,10,10" Grid.Column="2" Grid.Row="0">
 					<WrapPanel Margin="5,5,5,5" ToolTip="Exclude doors based on Function = Exterior">
 						<CheckBox x:Name="function_interior_b" IsChecked="True" Click="selection_changed"/>
 						<TextBlock TextWrapping="WrapWithOverflow" xml:space="preserve" Margin="3,0,0,0"><Bold> Exclude Exterior Doors</Bold></TextBlock>
@@ -251,10 +262,18 @@
 			<DockPanel LastChildFill="True">
 				<Button DockPanel.Dock="Right" x:Name="apply_b" Content="Apply Changes" Click="apply_changes" Width="100" Margin="0,5,15,5"/>
 				<Button DockPanel.Dock="Right" x:Name="cancel_b" Content="Cancel" Click="cancel" Width="100" Margin="0,5,0,5"/>
-				<Button DockPanel.Dock="Left" x:Name="select_b" Content="Check" Click="check_selected" Width="50" Margin="15,5,0,5"/>
-				<Button DockPanel.Dock="Left" x:Name="deselect_b" Content="Uncheck" Click="uncheck_selected" Width="50" Margin="0,5,0,5"/>
-				<Button DockPanel.Dock="Left" x:Name="select_all_b" Content="X All" Click="check_all" Width="50" Margin="0,5,0,5"/>
-				<Button DockPanel.Dock="Left" x:Name="deselect_all_b" Content="X None" Click="uncheck_all" Width="50" Margin="0,5,0,5"/>
+				<Button DockPanel.Dock="Left" x:Name="select_b" Click="check_selected" Width="20" Margin="15,5,0,5">
+					<TextBlock FontFamily="Segoe UI Symbol">&#x2611;</TextBlock>
+				</Button>
+				<Button DockPanel.Dock="Left" x:Name="deselect_b" Click="uncheck_selected" Width="20" Margin="0,5,0,5">
+					<TextBlock FontFamily="Segoe UI Symbol">&#x2610;</TextBlock>
+				</Button>
+				<Button DockPanel.Dock="Left" x:Name="select_all_b" Click="check_all" Width="50" Margin="0,5,0,5">
+					<TextBlock FontFamily="Segoe UI Symbol">&#x2611; All</TextBlock>
+				</Button>
+				<Button DockPanel.Dock="Left" x:Name="deselect_all_b" Click="uncheck_all" Width="50" Margin="0,5,0,5">
+					<TextBlock FontFamily="Segoe UI Symbol">&#x2610; All</TextBlock>
+				</Button>
 				<TextBlock TextAlignment="Center" FontFamily="Verdana" FontWeight="Light" Foreground="SlateGray" FontSize="9"> Created by <Hyperlink Foreground="Red" NavigateUri="https://github.com/BrettBeckemeyer">BrettBeckemeyer</Hyperlink></TextBlock>
 			</DockPanel>
 <!--			<Grid.RowDefinitions>

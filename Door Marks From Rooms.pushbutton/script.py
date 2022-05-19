@@ -11,6 +11,8 @@ __authors__ = 'Brett Beckemeyer (bbeckemeyer@cannondesign.com)'
 
 #__beta__ = '0.9'
 
+'''Updated 2022-05-18: Added fix for to/from rooms not in same phase as doors'''
+
 from os import path
 
 # import itertools # not used?
@@ -105,13 +107,15 @@ class ListWindow(forms.WPFWindow):
 	def _setup_defaults(self):
 		default_appear_param = 'Appear In Schedule' # default value to set door filter parameter name in dialog
 		default_room_character = '.' # default value to set room number character textbox in dialog
-		self.default_suffix = 'A'
+		default_suffix = 'A'
 		self._set_reasons() # sets up reasons for table
 		self.room_name_rb.IsChecked = True # by default, parameter for determining priority is set to room name
 		self._setup_phase_combobox()
 		self._setup_levels_combobox()
 		self._set_param_textbox(default_appear_param)
 		self._set_roomno_textbox(default_room_character)
+		#2022-05-18: Added parameters to handle suffix options in dialog
+		self._set_default_suffix(default_suffix)
 		self.function_interior_b.IsChecked = True # by derault, checkbox to filter out exterior doors is checked
 		self.error_filter = False # filter error default value is false, will be changed to true is needed by script
 		#Function to define default priority file path
@@ -158,6 +162,15 @@ class ListWindow(forms.WPFWindow):
 	@property
 	def param_appear(self):
 		return self.appear_param_tb.Text
+
+#2022-05-18: Added parameters to handle suffix options in dialog
+	@property
+	def default_suffix(self):
+		return self.default_suffix_tb.Text
+
+	@property
+	def suffix_separator(self):
+		return self.suffix_separator_tb.Text
 
 	@property
 	def rooms_exclude(self):
@@ -452,6 +465,9 @@ class ListWindow(forms.WPFWindow):
 	def _set_roomno_textbox(self, name): # set the room number character textbox to this value
 		self.roomno_character_tb.Text = name
 
+	def _set_default_suffix(self, name): # set the room number character textbox to this value
+		self.default_suffix_tb.Text = name
+
 	def _set_reasons(self):
 		self.reason_0 = '0. No To or From Room found'
 		self.reason_1 = '1. To Room priority'
@@ -516,17 +532,24 @@ class ListWindow(forms.WPFWindow):
 			logger.debug('Door ID: ' + door.Id.ToString())
 			# Filter out doors that are not created in selected phase
 			if door.CreatedPhaseId == self.phase.Id:
+				logger.debug('This door is in the selected phase')
 				appear = 1 #set binary default to check if door should be included based on appear parameter
 				if self.filter_appear_param:
 					appear = self._door_check_filter_appear(door) #if configuration calls for it, then run check on appearance parameter value equals yes
+					logger.debug('Filter appear parameter:')
+					logger.debug(appear)
 				function = 1 #set binary default to check if door should be included based on function
 				if self.filter_function:
 					function = self._door_check_filter_function(door) #if configuration calls for it, then run check on function equals interior
+				logger.debug('Appear = ' + str(appear))
+				logger.debug('Function = ' + str(function))
 				if appear == 1 and function == 1: #only proceed if both binaries are true
+					logger.debug('Attempting to add door to dictionary...')
 					try:
 						list_.append(door)
+						logger.debug('...successfully added!')
 					except:
-						a = 'a'
+						logger.debug('...failed to add door to dictionary!')
 		return list_
 
 
@@ -603,10 +626,33 @@ class ListWindow(forms.WPFWindow):
 				mark_org = door.LookupParameter("Mark").AsString()
 			except:
 				mark_org = ''
+				logger.debug('Current door mark could not be found')
+			logger.debug('Current door mark is: ' + mark_org)
 			if mark_org:
+				logger.debug('Gathering door room to / from information')
 				door_phase = door.Document.GetElement(door.CreatedPhaseId)
 				room_to = door.ToRoom[door_phase]
+				#2022-05-18: if to room not found in door's phase, then iterate through all phases starting at most recent
+				if not room_to:
+					logger.debug('Room to of door phase not found')
+					for n, p in sorted(self.phases_dict.items(), reverse=True): #should the default be reversed? user definable?
+						logger.debug('Trying phase: ' + n)
+						try:
+							room_to = door.ToRoom[p]
+						except:
+							pass
+						if room_to: break
 				room_from = door.FromRoom[door_phase]
+				#2022-05-18: if from room not found in door's phase, then iterate through all phases starting at most recent
+				if not room_from:
+					logger.debug('Room from of door phase not found')
+					for n, p in sorted(self.phases_dict.items(), reverse=True): #should the default be reversed? user definable?
+						logger.debug('Trying phase: ' + n)
+						try:
+							room_from = door.FromRoom[p]
+						except:
+							pass
+						if room_from: break
 				#room_to = door.ToRoom[self.phase]
 				#room_from = door.FromRoom[self.phase]
 				if room_to or room_from: #if neither a to nor a from room is found, door is excluded from the dictionary
@@ -768,10 +814,13 @@ class ListWindow(forms.WPFWindow):
 				logger.debug(marks_list)
 			for drid in drids:
 				check = self.check_default
+				#2022-05-18: Added parameters to handle suffix options in dialog
 				suffix = self.default_suffix
+				separator = self.suffix_separator
 				mark_new = ''
 				if len(marks_list) > 1:
-					mark_new = room + suffix
+					#2022-05-18: Added parameters to handle suffix options in dialog
+					mark_new = room + separator + suffix
 				else:
 					mark_new = room
 				mark_old = self._master_dict[drid]['mark_org']
@@ -787,7 +836,8 @@ class ListWindow(forms.WPFWindow):
 						logger.debug(marks_list)
 						while mark_new in marks_list:
 							suffix = chr(ord(suffix) + 1)
-							mark_new = room + suffix
+							#2022-05-18: Added parameters to handle suffix options in dialog
+							mark_new = room + separator + suffix
 							logger.debug('new mark to test is: ' + mark_new)
 					marks_list.append(mark_new)
 					logger.debug('adding new mark: ' + mark_new)
